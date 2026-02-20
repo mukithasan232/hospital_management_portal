@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String
+  role          String    @default("PATIENT") // ADMIN, DOCTOR, PATIENT
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  patient       Patient?
+  doctor        Doctor?
+}
+
+model Patient {
+  id              String        @id @default(cuid())
+  userId          String        @unique
+  user            User          @relation(fields: [userId], references: [id])
+  dateOfBirth     DateTime?
+  gender          String?
+  bloodGroup      String?
+  address         String?
+  medicalHistory  String?
+  appointments    Appointment[]
+}
+
+model Doctor {
+  id              String        @id @default(cuid())
+  userId          String        @unique
+  user            User          @relation(fields: [userId], references: [id])
+  specialization  String
+  experience      Int?
+  bio             String?
+  consultationFee Float         @default(0)
+  availability    String?       // Working hours etc.
+  appointments    Appointment[]
+}
+
+model Appointment {
+  id            String    @id @default(cuid())
+  patientId     String
+  patient       Patient   @relation(fields: [patientId], references: [id])
+  doctorId      String
+  doctor        Doctor    @relation(fields: [doctorId], references: [id])
+  dateTime      DateTime
+  status        String    @default("PENDING") // PENDING, CONFIRMED, CANCELLED, COMPLETED
+  notes         String?
+  prescription  Prescription?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Prescription {
+  id            String      @id @default(cuid())
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  diagnosis     String?
+  medicines     String?     // Medicines and dosage
+  instructions  String?
+  createdAt     DateTime    @default(now())
+}
